@@ -10,7 +10,7 @@ jobs:
   build-ami:
     uses: Algorizz/infra-as-code/.github/workflows/build-ami-central.yml@main
     with:
-      microservice: Dandar-InventoryOrderManagement-Service
+      microservice: NCERT-IoT-Backend
       branch_name: ${{ github.ref_name }}
       env: dev
       project: NCERT-IoT-Backend
@@ -21,7 +21,7 @@ jobs:
     needs: build-ami
     uses: Algorizz/infra-as-code/.github/workflows/deploy-infra.yml@main
     with:
-      microservice: Dandar-InventoryOrderManagement-Service
+      microservice: NCERT-IoT-Backend
       branch_name: ${{ github.ref_name }}
       env: dev
       project: NCERT-IoT-Backend
