@@ -9,6 +9,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Root path
+app.get('/', (req, res) => {
+  res.json({ message: 'IoT Backend API is running' });
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  const healthcheck = {
+    status: 'UP',
+    timestamp: new Date(),
+    uptime: process.uptime(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  };
+  res.json(healthcheck);
+});
+
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/iot_db', {
   useNewUrlParser: true,
