@@ -153,30 +153,12 @@ Response (200 OK):
 }
 ```
 
-### 3. Relay Control Endpoints
-
-#### 3.1 Get Relay Status
-
-Check the current status of a device's relay.
-
-```
-GET /api/relay/status?deviceId=YOUR_DEVICE_ID
-x-auth-token: YOUR_AUTH_TOKEN
-
-Response (200 OK):
-{
-  "success": true,
-  "deviceId": "YOUR_DEVICE_ID",
-  "relay": "off"  // or "on"
-}
-```
-
-#### 3.2 Set Relay Status
+### 3. Relay Control Endpoint
 
 Control the relay state for a device.
 
 ```
-POST /api/relay/status
+POST /api/relay/control
 Content-Type: application/json
 x-auth-token: YOUR_AUTH_TOKEN
 
@@ -193,6 +175,8 @@ Response (200 OK):
   "relay": "on"  // or "off"
 }
 ```
+
+Note: This endpoint is used to send control commands to devices. The relay state is maintained in memory and will be reset when the server restarts.
 
 ### 4. Device Management Endpoints
 
