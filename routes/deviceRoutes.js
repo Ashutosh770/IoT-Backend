@@ -4,7 +4,7 @@ const { authenticateDevice } = require('../middleware/auth');
 const Device = require('../models/device');
 
 // Get device count and list
-router.get('/count', authenticateDevice, async (req, res) => {
+router.get('/count', async (req, res) => {
   try {
     const devices = await Device.find({}, {
       deviceId: 1,
