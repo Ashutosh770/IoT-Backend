@@ -47,7 +47,7 @@ This project implements a complete IoT system for monitoring temperature and hum
 
 1. **Register your ESP32 device**
    ```powershell
-   $response = Invoke-RestMethod -Method Post -Uri "https://your-render-url.onrender.com/api/devices/register" -ContentType "application/json" -Body '{"deviceId":"ESP32_001","name":"Living Room Sensor","location":"Living Room"}'
+   $response = Invoke-RestMethod -Method Post -Uri "https://your-render-url.onrender.com/api/devices/register" -ContentType "application/json" -Body '{"deviceId":"ESP32_002","name":"Bhopal Green Technology park","location":"Bhopal"}'
    $response | ConvertTo-Json
    ```
 

@@ -12,6 +12,10 @@ const deviceSchema = new mongoose.Schema({
   },
   name: String,
   location: String,
+  lastSeen: {
+    type: Date,
+    default: Date.now
+  },
   createdAt: {
     type: Date,
     default: Date.now

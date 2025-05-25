@@ -12,6 +12,7 @@ app.use(express.json());
 
 // Import routes
 const relayRoutes = require('./routes/relay');
+const deviceRoutes = require('./routes/deviceRoutes');
 
 // Import models
 const Device = require('./models/device');
@@ -162,8 +163,9 @@ app.get('/api/data/latest', async (req, res) => {
   }
 });
 
-// Use relay routes
+// Use routes
 app.use('/api/relay', relayRoutes);
+app.use('/api/devices', deviceRoutes);
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI, {
