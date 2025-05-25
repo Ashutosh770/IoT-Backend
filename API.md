@@ -112,6 +112,47 @@ Response (200 OK):
 }
 ```
 
+#### 2.4 Get Latest Data for Specific Device
+
+Retrieve the most recent sensor reading for a specific device.
+
+```
+GET /api/devices/{deviceId}/latest
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "deviceId": "YOUR_DEVICE_ID",
+    "temperature": 25.5,
+    "humidity": 60.0,
+    "timestamp": "2024-03-21T10:30:00.000Z"
+  }
+}
+```
+
+#### 2.5 Get History Data for Specific Device
+
+Retrieve historical sensor readings for a specific device.
+
+```
+GET /api/devices/{deviceId}/history
+
+Response (200 OK):
+{
+  "success": true,
+  "data": [
+    {
+      "deviceId": "YOUR_DEVICE_ID",
+      "temperature": 25.5,
+      "humidity": 60.0,
+      "timestamp": "2024-03-21T10:30:00.000Z"
+    },
+    // ... more readings
+  ]
+}
+```
+
 ### 3. Relay Control Endpoints
 
 #### 3.1 Get Relay Status
@@ -157,11 +198,10 @@ Response (200 OK):
 
 #### 4.1 Get Device Count
 
-Get the total number of registered devices in the system.
+Get the total number of registered devices in the system. This endpoint is publicly accessible and doesn't require authentication.
 
 ```
 GET /api/devices/count
-x-auth-token: YOUR_AUTH_TOKEN
 
 Response (200 OK):
 {
@@ -178,6 +218,8 @@ Response (200 OK):
   ]
 }
 ```
+
+Note: This endpoint returns basic device information without sensitive data like authentication tokens.
 
 ## Error Responses
 

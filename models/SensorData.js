@@ -7,11 +7,15 @@ const sensorDataSchema = new mongoose.Schema({
   },
   temperature: {
     type: Number,
-    required: true
+    required: true,
+    min: -40,   // DHT11 minimum
+    max: 80     // DHT11 maximum
   },
   humidity: {
     type: Number,
-    required: true
+    required: true,
+    min: 0,
+    max: 100
   },
   timestamp: {
     type: Date,
