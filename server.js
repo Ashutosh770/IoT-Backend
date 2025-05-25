@@ -10,26 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Device Model
-const deviceSchema = new mongoose.Schema({
-  deviceId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  authToken: {
-    type: String,
-    required: true
-  },
-  name: String,
-  location: String,
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+// Import routes
+const relayRoutes = require('./routes/relay');
 
-const Device = mongoose.model('Device', deviceSchema);
+// Import models
+const Device = require('./models/device');
 
 // Sensor Data Model
 const sensorDataSchema = new mongoose.Schema({
@@ -176,6 +161,9 @@ app.get('/api/data/latest', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Use relay routes
+app.use('/api/relay', relayRoutes);
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI, {
