@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { authenticateDevice } from '../middleware/auth.js';
+import Device from '../models/device.js';
+import SensorData from '../models/SensorData.js';
+
 const router = express.Router();
-const { authenticateDevice } = require('../middleware/auth');
-const Device = require('../models/device');
-const SensorData = require('../models/SensorData');
 
 // Get device count and list with auth tokens
 router.get('/count', async (req, res) => {
@@ -115,4 +116,4 @@ router.get('/:deviceId/history', async (req, res) => {
   }
 });
 
-module.exports = router; 
+export default router; 

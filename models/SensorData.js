@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const sensorDataSchema = new mongoose.Schema({
   deviceId: {
@@ -23,4 +23,6 @@ const sensorDataSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('SensorData', sensorDataSchema);
+const SensorData = mongoose.model('SensorData', sensorDataSchema);
+
+export default SensorData;

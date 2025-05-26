@@ -1,8 +1,17 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const crypto = require('crypto');
-require('dotenv').config();
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// ES Module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
@@ -11,12 +20,12 @@ app.use(cors());
 app.use(express.json());
 
 // Import routes
-const relayRoutes = require('./routes/relay');
-const deviceRoutes = require('./routes/deviceRoutes');
+import relayRoutes from './routes/relay.js';
+import deviceRoutes from './routes/deviceRoutes.js';
 
 // Import models
-const Device = require('./models/device');
-const SensorData = require('./models/SensorData');
+import Device from './models/device.js';
+import SensorData from './models/SensorData.js';
 
 // Authentication middleware
 const authenticateDevice = async (req, res, next) => {

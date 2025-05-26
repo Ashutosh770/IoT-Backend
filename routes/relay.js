@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { authenticateDevice } from '../middleware/auth.js';
+
 const router = express.Router();
-const { authenticateDevice } = require('../middleware/auth');
 
 // In-memory storage for relay states
 const relayStates = new Map();
@@ -25,4 +26,4 @@ router.post('/control', authenticateDevice, (req, res) => {
   });
 });
 
-module.exports = router; 
+export default router; 

@@ -1,4 +1,4 @@
-const Device = require('../models/device');
+import Device from '../models/device.js';
 
 const authenticateDevice = async (req, res, next) => {
   const authToken = req.headers['x-auth-token'];
@@ -20,6 +20,4 @@ const authenticateDevice = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  authenticateDevice
-}; 
+export { authenticateDevice }; 
