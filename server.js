@@ -1,8 +1,8 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const crypto = require('crypto');
+require('dotenv').config();
 
 const app = express();
 
@@ -64,17 +64,28 @@ app.post('/api/devices/register', async (req, res) => {
       return res.status(400).json({ error: 'Device ID is required' });
     }
 
-    // Generate a secure random token
-    const authToken = crypto.randomBytes(32).toString('hex');
+    // Check if device already exists
+    let device = await Device.findOne({ deviceId });
+    
+    if (device) {
+      // If device exists, generate a new auth token
+      device.authToken = crypto.randomBytes(32).toString('hex');
+      device.lastSeen = new Date();
+      await device.save();
+    } else {
+      // Generate a secure random token for new device
+      const authToken = crypto.randomBytes(32).toString('hex');
+      
+      device = new Device({
+        deviceId,
+        authToken,
+        name,
+        location,
+        lastSeen: new Date()
+      });
 
-    const device = new Device({
-      deviceId,
-      authToken,
-      name,
-      location
-    });
-
-    await device.save();
+      await device.save();
+    }
 
     res.status(201).json({
       success: true,
@@ -86,6 +97,7 @@ app.post('/api/devices/register', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Device registration error:', error);
     if (error.code === 11000) {
       res.status(400).json({ error: 'Device ID already registered' });
     } else {

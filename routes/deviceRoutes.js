@@ -4,7 +4,7 @@ const { authenticateDevice } = require('../middleware/auth');
 const Device = require('../models/device');
 const SensorData = require('../models/SensorData');
 
-// Get device count and list
+// Get device count and list with auth tokens
 router.get('/count', async (req, res) => {
   try {
     const devices = await Device.find({}, {
@@ -12,6 +12,7 @@ router.get('/count', async (req, res) => {
       name: 1,
       location: 1,
       lastSeen: 1,
+      authToken: 1,
       _id: 0
     });
 
@@ -24,6 +25,40 @@ router.get('/count', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch device count',
+      details: error.message
+    });
+  }
+});
+
+// Get device details with auth token
+router.get('/:deviceId', async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    
+    const device = await Device.findOne({ deviceId }, {
+      deviceId: 1,
+      name: 1,
+      location: 1,
+      lastSeen: 1,
+      authToken: 1,
+      _id: 0
+    });
+
+    if (!device) {
+      return res.status(404).json({
+        success: false,
+        error: 'Device not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      device: device
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch device details',
       details: error.message
     });
   }
