@@ -15,8 +15,8 @@ const char* deviceId = "ESP32_002";
 const char* authToken = "e40bc5ff723663397dd4060807d255cbc74cb72507e72184b6243093fce20123"; // Replace with the actual token for ESP32_002
 
 // Sensor Config
-#define DHTPIN 4          // GPIO4 for DHT22
-#define DHTTYPE DHT22     // DHT22 Sensor
+#define DHTPIN 4          // GPIO4 for DHT11
+#define DHTTYPE DHT11     // DHT11 Sensor
 DHT dht(DHTPIN, DHTTYPE);
 
 // Relay Config
@@ -24,6 +24,10 @@ DHT dht(DHTPIN, DHTTYPE);
 #define RELAY2_PIN 5      // GPIO5 for Relay 2
 #define RELAY3_PIN 18     // GPIO18 for Relay 3
 #define RELAY4_PIN 19     // GPIO19 for Relay 4
+
+// Soil Moisture Sensor Config
+#define SOIL_MOISTURE_AO_PIN 36 // GPIO36 (VP) for analog output
+#define SOIL_MOISTURE_DO_PIN 25 // GPIO25 for digital output (optional)
 
 // Time Sync
 const char* ntpServer = "pool.ntp.org";
@@ -65,6 +69,10 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("\nTime synchronized.");
+
+  // Initialize soil moisture sensor pins
+  pinMode(SOIL_MOISTURE_AO_PIN, INPUT);
+  pinMode(SOIL_MOISTURE_DO_PIN, INPUT); // Optional, if using digital output
 }
 
 void loop() {
@@ -81,19 +89,29 @@ void loop() {
   unsigned long currentTime = millis();
   if (currentTime - lastSendTime >= SEND_INTERVAL) {
     float temperature = NAN, humidity = NAN;
+    int soilMoistureAnalog = 0;
+    int soilMoisturePercent = 0;
 
     // Try reading sensor data multiple times
-    for (int i = 0; i < 5; i++) { // Increased retry attempts
+    for (int i = 0; i < 5; i++) {
       temperature = dht.readTemperature();
       humidity = dht.readHumidity();
       if (!isnan(temperature) && !isnan(humidity)) break;
       Serial.println("Retrying sensor read...");
-      delay(1000); // Wait a bit before retrying
+      delay(1000);
     }
 
+    // Read soil moisture sensor
+    soilMoistureAnalog = analogRead(SOIL_MOISTURE_AO_PIN);
+    // Map analog value to percentage (0 = dry, 4095 = wet, invert for %)
+    soilMoisturePercent = map(soilMoistureAnalog, 4095, 0, 0, 100);
+    soilMoisturePercent = constrain(soilMoisturePercent, 0, 100);
+    Serial.print("Soil Moisture Analog: "); Serial.println(soilMoistureAnalog);
+    Serial.print("Soil Moisture Percent: "); Serial.print(soilMoisturePercent); Serial.println("%");
+
     if (!isnan(temperature) && !isnan(humidity)) {
-      sendDataToBackend(temperature, humidity);
-      checkAndControlRelay();  // relay control after sending data
+      sendDataToBackend(temperature, humidity, soilMoisturePercent);
+      checkAndControlRelay();
       lastSendTime = currentTime;
     } else {
       Serial.println("Failed to read sensor data after multiple attempts.");
@@ -101,9 +119,9 @@ void loop() {
   }
 }
 
-void sendDataToBackend(float temp, float hum) {
+void sendDataToBackend(float temp, float hum, int soilMoisturePercent) {
   WiFiClientSecure client;
-  client.setInsecure(); // Note: Disables certificate validation. Use trusted certs in production.
+  client.setInsecure();
   HTTPClient http;
 
   String endpoint = String(serverUrl) + "/api/data";
@@ -113,10 +131,11 @@ void sendDataToBackend(float temp, float hum) {
   http.addHeader("Content-Type", "application/json");
   http.addHeader("x-auth-token", authToken);
 
-  StaticJsonDocument<200> doc;
+  StaticJsonDocument<256> doc;
   doc["deviceId"] = deviceId;
   doc["temperature"] = temp;
   doc["humidity"] = hum;
+  doc["soilMoisture"] = soilMoisturePercent;
   String jsonData;
   serializeJson(doc, jsonData);
 

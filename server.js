@@ -118,7 +118,7 @@ app.post('/api/devices/register', async (req, res) => {
 // API Endpoints
 app.post('/api/data', authenticateDevice, async (req, res) => {
   try {
-    const { deviceId, temperature, humidity } = req.body;
+    const { deviceId, temperature, humidity, soilMoisture } = req.body;
     
     // Validation
     if (!deviceId || temperature == null || humidity == null) {
@@ -129,7 +129,8 @@ app.post('/api/data', authenticateDevice, async (req, res) => {
     const newData = new SensorData({
       deviceId,
       temperature,
-      humidity
+      humidity,
+      ...(soilMoisture !== undefined && { soilMoisture })
     });
 
     await newData.save();

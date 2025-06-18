@@ -17,6 +17,12 @@ const sensorDataSchema = new mongoose.Schema({
     min: 0,
     max: 100
   },
+  soilMoisture: {
+    type: Number,
+    min: 0,
+    max: 100,
+    required: false
+  },
   timestamp: {
     type: Date,
     default: Date.now
