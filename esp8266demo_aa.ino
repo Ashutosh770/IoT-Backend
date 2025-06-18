@@ -1,29 +1,29 @@
-#include <WiFi.h>
-#include <HTTPClient.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <DHT.h>
 #include <ArduinoJson.h>
 #include <time.h>
-#include <WiFiClientSecure.h>
 
 // Debug flags
 #define DEBUG_SENSOR true
 #define DEBUG_RELAY true
 
-// WiFi credentials
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
+// WiFi Credentials
+const char* ssid = "Ashutosh's S21 FE";
+const char* password = "12341234";
 
-// Backend API configuration
+// Backend Config
 const char* serverUrl = "https://iot-backend-dj8u.onrender.com";
-const char* deviceId = "ESP32_002";  // Change this to a unique ID for each device
-const char* authToken = "e40bc5ff723663397dd4060807d255cbc74cb72507e72184b6243093fce20123";  // Get this from device registration
+const char* deviceId = "ESP32_002";
+const char* authToken = "e40bc5ff723663397dd4060807d255cbc74cb72507e72184b6243093fce20123";
 
-// ESP32 Pin Configuration
-#define DHTPIN 4          // GPIO4 for DHT22
-#define DHTTYPE DHT11     // DHT22 Sensor
-#define RELAY_PIN 5       // GPIO5 for Relay
-#define WIFI_LED 2        // GPIO2 for WiFi status LED
-#define SENSOR_LED 15     // GPIO15 for Sensor reading LED
+// ESP8266 Pin Configuration (using GPIO numbers)
+#define DHTPIN 2          // GPIO2 (D4) for DHT22
+#define DHTTYPE DHT11     // DHT11 Sensor
+#define RELAY_PIN 5       // GPIO5 (D1) for Relay
+#define WIFI_LED 4        // GPIO4 (D2) for WiFi status LED
+#define SENSOR_LED 0      // GPIO0 (D3) for Sensor reading LED
 
 // Sensor Config
 DHT dht(DHTPIN, DHTTYPE);
@@ -36,16 +36,16 @@ const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 0;
 const int daylightOffset_sec = 3600;
 
-// Timing configuration
-const unsigned long SEND_INTERVAL = 30000;    // Send data every 30 seconds
-const unsigned long RELAY_CHECK_INTERVAL = 5000;  // Check relay status every 5 seconds
+// Timing
+const unsigned long SEND_INTERVAL = 30000;    // 30 seconds for sensor data
+const unsigned long RELAY_CHECK_INTERVAL = 5000;  // 5 seconds for relay check
 unsigned long lastSendTime = 0;
 unsigned long lastRelayCheck = 0;
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
-  Serial.println("\n\n=== ESP32 IoT Device Starting ===");
+  Serial.println("\n\n=== ESP8266 IoT Device Starting ===");
 
   // Initialize pins
   pinMode(RELAY_PIN, OUTPUT);
@@ -141,9 +141,9 @@ void loop() {
 }
 
 void sendDataToBackend(float temp, float hum) {
-  HTTPClient http;
   WiFiClientSecure client;
-  client.setInsecure(); // Note: Use proper certificate validation in production
+  client.setInsecure();
+  HTTPClient http;
 
   String endpoint = String(serverUrl) + "/api/data";
   if (DEBUG_SENSOR) {
@@ -196,9 +196,9 @@ void controlRelay(bool state) {
     return;
   }
   
-  HTTPClient http;
   WiFiClientSecure client;
   client.setInsecure();
+  HTTPClient http;
 
   String endpoint = String(serverUrl) + "/api/relay/control";
   if (DEBUG_RELAY) {
@@ -289,9 +289,9 @@ void checkRelayStatus() {
     Serial.println("\n=== CHECKING RELAY STATUS ===");
   }
   
-  HTTPClient http;
   WiFiClientSecure client;
   client.setInsecure();
+  HTTPClient http;
 
   String endpoint = String(serverUrl) + "/api/relay/status/" + deviceId;
   if (DEBUG_RELAY) {

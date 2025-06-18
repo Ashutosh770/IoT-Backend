@@ -5,6 +5,7 @@ import Device from '../models/device.js';
 const router = express.Router();
 
 // In-memory storage for relay states
+// Structure: Map<deviceId, {relay1: state, relay2: state, relay3: state, relay4: state}>
 const relayStates = new Map();
 
 // GET relay status
@@ -23,12 +24,17 @@ router.get('/status/:deviceId', async (req, res) => {
       return res.status(401).json({ error: 'Invalid device credentials' });
     }
 
-    const currentState = relayStates.get(deviceId) || 'off';
+    const currentStates = relayStates.get(deviceId) || {
+      relay1: 'off',
+      relay2: 'off',
+      relay3: 'off',
+      relay4: 'off'
+    };
     
     res.json({
       success: true,
       deviceId,
-      relay: currentState
+      relays: currentStates
     });
   } catch (error) {
     res.status(500).json({ error: 'Authentication error' });
@@ -37,21 +43,36 @@ router.get('/status/:deviceId', async (req, res) => {
 
 // POST relay control
 router.post('/control', authenticateDevice, (req, res) => {
-  const { deviceId, relay } = req.body;
+  const { deviceId, relayNumber, state } = req.body;
   
-  if (!deviceId || !relay) {
-    return res.status(400).json({ error: 'Device ID and relay state are required' });
+  if (!deviceId || !relayNumber || !state) {
+    return res.status(400).json({ error: 'Device ID, relay number, and state are required' });
   }
 
-  if (!['on', 'off'].includes(relay.toLowerCase())) {
+  if (![1, 2, 3, 4].includes(relayNumber)) {
+    return res.status(400).json({ error: 'Relay number must be between 1 and 4' });
+  }
+
+  if (!['on', 'off'].includes(state.toLowerCase())) {
     return res.status(400).json({ error: 'Relay state must be either "on" or "off"' });
   }
 
-  relayStates.set(deviceId, relay.toLowerCase());
+  // Get current states or initialize with defaults
+  const currentStates = relayStates.get(deviceId) || {
+    relay1: 'off',
+    relay2: 'off',
+    relay3: 'off',
+    relay4: 'off'
+  };
+
+  // Update the specific relay state
+  currentStates[`relay${relayNumber}`] = state.toLowerCase();
+  relayStates.set(deviceId, currentStates);
+
   res.json({
     success: true,
     deviceId,
-    relay: relay.toLowerCase()
+    relays: currentStates
   });
 });
 

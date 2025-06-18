@@ -153,7 +153,35 @@ Response (200 OK):
 }
 ```
 
-### 3. Relay Control Endpoint
+### 3. Relay Control Endpoints
+
+#### 3.1 Get Relay Status
+
+Get the current relay state for a specific device.
+
+```
+GET /api/relay/status/{deviceId}
+x-auth-token: YOUR_AUTH_TOKEN
+
+Response (200 OK):
+{
+  "success": true,
+  "deviceId": "YOUR_DEVICE_ID",
+  "relay": "on"  // or "off"
+}
+
+Error Responses:
+401 Unauthorized:
+{
+  "error": "Authentication required"
+}
+or
+{
+  "error": "Invalid device credentials"
+}
+```
+
+#### 3.2 Control Relay
 
 Control the relay state for a device.
 
@@ -174,9 +202,28 @@ Response (200 OK):
   "deviceId": "YOUR_DEVICE_ID",
   "relay": "on"  // or "off"
 }
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Device ID and relay state are required"
+}
+or
+{
+  "error": "Relay state must be either \"on\" or \"off\""
+}
+
+401 Unauthorized:
+{
+  "error": "Authentication required"
+}
+or
+{
+  "error": "Invalid device credentials"
+}
 ```
 
-Note: This endpoint is used to send control commands to devices. The relay state is maintained in memory and will be reset when the server restarts.
+Note: The relay state is maintained in memory and will be reset when the server restarts.
 
 ### 4. Device Management Endpoints
 

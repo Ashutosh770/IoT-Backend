@@ -20,7 +20,10 @@ const char* authToken = "e40bc5ff723663397dd4060807d255cbc74cb72507e72184b624309
 DHT dht(DHTPIN, DHTTYPE);
 
 // Relay Config
-#define RELAY_PIN 2       // GPIO2 connected to relay
+#define RELAY1_PIN 2      // GPIO2 for Relay 1
+#define RELAY2_PIN 5      // GPIO5 for Relay 2
+#define RELAY3_PIN 18     // GPIO18 for Relay 3
+#define RELAY4_PIN 19     // GPIO19 for Relay 4
 
 // Time Sync
 const char* ntpServer = "pool.ntp.org";
@@ -35,8 +38,17 @@ void setup() {
   Serial.begin(115200);
   delay(2000);
 
-  pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW); // Start relay OFF
+  // Initialize all relay pins
+  pinMode(RELAY1_PIN, OUTPUT);
+  pinMode(RELAY2_PIN, OUTPUT);
+  pinMode(RELAY3_PIN, OUTPUT);
+  pinMode(RELAY4_PIN, OUTPUT);
+  
+  // Start all relays OFF
+  digitalWrite(RELAY1_PIN, LOW);
+  digitalWrite(RELAY2_PIN, LOW);
+  digitalWrite(RELAY3_PIN, LOW);
+  digitalWrite(RELAY4_PIN, LOW);
 
   dht.begin();
   WiFi.begin(ssid, password);
@@ -121,11 +133,10 @@ void sendDataToBackend(float temp, float hum) {
 
 void checkAndControlRelay() {
   WiFiClientSecure client;
-  client.setInsecure(); // Note: Disables certificate validation. Use trusted certs in production.
+  client.setInsecure();
   HTTPClient http;
 
-  // CORRECTED URL
-  String url = String(serverUrl) + "/api/relay/status?deviceId=" + deviceId;
+  String url = String(serverUrl) + "/api/relay/status/" + deviceId;
   Serial.print("Checking relay status from: "); Serial.println(url);
 
   http.begin(client, url);
@@ -138,33 +149,51 @@ void checkAndControlRelay() {
   Serial.print("GET /api/relay/status Response: "); Serial.println(payload);
 
   if (responseCode == 200) {
-    StaticJsonDocument<128> doc;
+    StaticJsonDocument<512> doc; // Increased size for multiple relays
     DeserializationError error = deserializeJson(doc, payload);
 
     if (!error) {
-      if (doc.containsKey("relay")) {
-          String relayState = doc["relay"].as<String>(); // Use as<String>() for safety
-          if (relayState == "on") {
-              digitalWrite(RELAY_PIN, HIGH);
-              Serial.println("Relay state set to: on");
-          } else if (relayState == "off") {
-              digitalWrite(RELAY_PIN, LOW);
-              Serial.println("Relay state set to: off");
-          } else {
-               Serial.print("Received invalid relay state: "); Serial.println(relayState);
-          }
+      if (doc.containsKey("relays")) {
+        JsonObject relays = doc["relays"];
+        
+        // Control Relay 1
+        if (relays.containsKey("relay1")) {
+          String state = relays["relay1"].as<String>();
+          digitalWrite(RELAY1_PIN, state == "on" ? HIGH : LOW);
+          Serial.print("Relay 1 set to: "); Serial.println(state);
+        }
+        
+        // Control Relay 2
+        if (relays.containsKey("relay2")) {
+          String state = relays["relay2"].as<String>();
+          digitalWrite(RELAY2_PIN, state == "on" ? HIGH : LOW);
+          Serial.print("Relay 2 set to: "); Serial.println(state);
+        }
+        
+        // Control Relay 3
+        if (relays.containsKey("relay3")) {
+          String state = relays["relay3"].as<String>();
+          digitalWrite(RELAY3_PIN, state == "on" ? HIGH : LOW);
+          Serial.print("Relay 3 set to: "); Serial.println(state);
+        }
+        
+        // Control Relay 4
+        if (relays.containsKey("relay4")) {
+          String state = relays["relay4"].as<String>();
+          digitalWrite(RELAY4_PIN, state == "on" ? HIGH : LOW);
+          Serial.print("Relay 4 set to: "); Serial.println(state);
+        }
       } else {
-          Serial.println("Response missing 'relay' key.");
+        Serial.println("Response missing 'relays' key.");
       }
     } else {
       Serial.print("Failed to parse relay status JSON: "); Serial.println(error.c_str());
     }
   } else if (responseCode == 401) {
-      Serial.println("Authentication failed for relay status GET. Check deviceId and authToken.");
+    Serial.println("Authentication failed for relay status GET. Check deviceId and authToken.");
   } else if (responseCode == 400) {
-      Serial.println("Bad request for relay status GET. Check deviceId in query.");
-  }
-  else {
+    Serial.println("Bad request for relay status GET. Check deviceId in query.");
+  } else {
     Serial.print("Relay GET failed with response code: "); Serial.println(responseCode);
   }
   http.end();
