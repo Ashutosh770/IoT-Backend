@@ -23,6 +23,12 @@ const sensorDataSchema = new mongoose.Schema({
     max: 100,
     required: false
   },
+  distance: {
+    type: Number,
+    min: 2,
+    max: 400,
+    required: false
+  },
   timestamp: {
     type: Date,
     default: Date.now

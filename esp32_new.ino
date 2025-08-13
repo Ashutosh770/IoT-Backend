@@ -29,13 +29,17 @@ DHT dht(DHTPIN, DHTTYPE);
 #define SOIL_MOISTURE_AO_PIN 36 // GPIO36 (VP) for analog output
 #define SOIL_MOISTURE_DO_PIN 25 // GPIO25 for digital output (optional)
 
+// Ultrasonic Sensor Config (HC-SR04)
+#define TRIG_PIN 13             // GPIO13 for Trigger pin
+#define ECHO_PIN 12             // GPIO12 for Echo pin
+
 // Time Sync
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 0;
 const int daylightOffset_sec = 3600;
 
 // Timing
-const unsigned long SEND_INTERVAL = 30000; // Send data and check relay every 30 seconds
+const unsigned long SEND_INTERVAL = 2000; // Send data and check relay every 2 seconds
 unsigned long lastSendTime = 0;
 
 void setup() {
@@ -73,6 +77,10 @@ void setup() {
   // Initialize soil moisture sensor pins
   pinMode(SOIL_MOISTURE_AO_PIN, INPUT);
   pinMode(SOIL_MOISTURE_DO_PIN, INPUT); // Optional, if using digital output
+  
+  // Initialize ultrasonic sensor pins
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
 }
 
 void loop() {
@@ -91,6 +99,7 @@ void loop() {
     float temperature = NAN, humidity = NAN;
     int soilMoistureAnalog = 0;
     int soilMoisturePercent = 0;
+    float distance = 0.0;
 
     // Try reading sensor data multiple times
     for (int i = 0; i < 5; i++) {
@@ -109,8 +118,12 @@ void loop() {
     Serial.print("Soil Moisture Analog: "); Serial.println(soilMoistureAnalog);
     Serial.print("Soil Moisture Percent: "); Serial.print(soilMoisturePercent); Serial.println("%");
 
+    // Read ultrasonic sensor
+    distance = readUltrasonicDistance();
+    Serial.print("Distance: "); Serial.print(distance); Serial.println(" cm");
+
     if (!isnan(temperature) && !isnan(humidity)) {
-      sendDataToBackend(temperature, humidity, soilMoisturePercent);
+      sendDataToBackend(temperature, humidity, soilMoisturePercent, distance);
       checkAndControlRelay();
       lastSendTime = currentTime;
     } else {
@@ -119,7 +132,7 @@ void loop() {
   }
 }
 
-void sendDataToBackend(float temp, float hum, int soilMoisturePercent) {
+void sendDataToBackend(float temp, float hum, int soilMoisturePercent, float distance) {
   WiFiClientSecure client;
   client.setInsecure();
   HTTPClient http;
@@ -131,11 +144,12 @@ void sendDataToBackend(float temp, float hum, int soilMoisturePercent) {
   http.addHeader("Content-Type", "application/json");
   http.addHeader("x-auth-token", authToken);
 
-  StaticJsonDocument<256> doc;
+  StaticJsonDocument<300> doc;
   doc["deviceId"] = deviceId;
   doc["temperature"] = temp;
   doc["humidity"] = hum;
   doc["soilMoisture"] = soilMoisturePercent;
+  doc["distance"] = distance;
   String jsonData;
   serializeJson(doc, jsonData);
 
@@ -216,4 +230,27 @@ void checkAndControlRelay() {
     Serial.print("Relay GET failed with response code: "); Serial.println(responseCode);
   }
   http.end();
+}
+
+// Function to read ultrasonic sensor distance
+float readUltrasonicDistance() {
+  // Clear the trigger pin
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  
+  // Send a 10-microsecond pulse to trigger pin
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  
+  // Read the echo pin, returns the sound wave travel time in microseconds
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  
+  // Calculate distance in centimeters
+  // Speed of sound is 343 m/s or 0.0343 cm/microsecond
+  // Distance = (time * speed) / 2 (divide by 2 because sound travels to object and back)
+  float distance = (duration * 0.0343) / 2;
+  
+  // Return distance, constrain to reasonable range (2cm to 400cm for HC-SR04)
+  return constrain(distance, 2.0, 400.0);
 }

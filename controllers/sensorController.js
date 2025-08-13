@@ -3,12 +3,14 @@ const SensorData = require('../models/SensorData');
 // Save sensor data
 exports.saveData = async (req, res) => {
   try {
-    const { deviceId, temperature, humidity } = req.body;
+    const { deviceId, temperature, humidity, soilMoisture, distance } = req.body;
     
     const newData = new SensorData({
       deviceId,
       temperature,
-      humidity
+      humidity,
+      soilMoisture,
+      distance
     });
 
     await newData.save();
